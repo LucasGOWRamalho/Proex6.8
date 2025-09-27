@@ -1,98 +1,164 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  FlatList, 
+  TouchableOpacity, 
+  RefreshControl,
+  SafeAreaView,
+  StatusBar,
+  Alert
+} from 'react-native';
+import { IconSymbol } from '@/components/ui/icon-symbol';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Colors } from '@/constants/theme';
+import PostCard from '@/components/PostCard';
+import mockPets from '@/data/mockPets';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+export default function FeedScreen() {
+  const colorScheme = useColorScheme();
+  const [refreshing, setRefreshing] = useState(false);
+  const [pets, setPets] = useState(mockPets);
 
-export default function HomeScreen() {
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    // Simular carregamento de novos dados
+    setTimeout(() => {
+      setRefreshing(false);
+      Alert.alert('Atualizado!', 'Feed atualizado com sucesso');
+    }, 1000);
+  }, []);
+
+  const handleLike = (petId: number) => {
+    console.log('Liked pet:', petId);
+  };
+
+  const handleShare = (petId: number) => {
+    const pet = pets.find(p => p.id === petId);
+    Alert.alert(
+      'Compartilhar',
+      `Compartilhar informações sobre ${pet?.name}?`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Compartilhar', onPress: () => console.log('Shared pet:', petId) }
+      ]
+    );
+  };
+
+  const handleComment = (petId: number) => {
+    const pet = pets.find(p => p.id === petId);
+    Alert.alert('Comentários', `Comentários sobre ${pet?.name}`);
+  };
+
+  const handleAddPost = () => {
+    Alert.alert(
+      'Novo Post',
+      'Deseja cadastrar um novo pet?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Cadastrar', onPress: () => console.log('Add new post') }
+      ]
+    );
+  };
+
+  const handleSearch = () => {
+    Alert.alert('Buscar', 'Funcionalidade de busca em desenvolvimento');
+  };
+
+  const renderPet = ({ item }: { item: any }) => (
+    <PostCard
+      pet={item}
+      onLike={handleLike}
+      onShare={handleShare}
+      onComment={handleComment}
+    />
+  );
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
+    <SafeAreaView style={[styles.container, { backgroundColor: Colors[colorScheme ?? 'light'].background }]}>
+      <StatusBar barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'} />
+      
+      {/* Header */}
+      <View style={[styles.header, { backgroundColor: Colors[colorScheme ?? 'light'].background }]}>
+        <View style={styles.headerLeft}>
+          <IconSymbol
+            name="pawprint.fill"
+            size={28}
+            color={Colors[colorScheme ?? 'light'].tint}
+          />
+          <Text style={[styles.headerTitle, { color: Colors[colorScheme ?? 'light'].text }]}>
+            PetFinder
+          </Text>
+        </View>
+        <View style={styles.headerRight}>
+          <TouchableOpacity style={styles.headerButton} onPress={handleSearch}>
+            <IconSymbol
+              name="magnifyingglass"
+              size={24}
+              color={Colors[colorScheme ?? 'light'].text}
             />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.headerButton} onPress={handleAddPost}>
+            <IconSymbol
+              name="plus.circle"
+              size={24}
+              color={Colors[colorScheme ?? 'light'].text}
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      {/* Feed */}
+      <FlatList
+        data={pets}
+        renderItem={renderPet}
+        keyExtractor={(item) => item.id.toString()}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.feedContainer}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={Colors[colorScheme ?? 'light'].tint}
+          />
+        }
+      />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.1)',
+  },
+  headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginLeft: 10,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerButton: {
+    marginLeft: 15,
+    padding: 5,
+  },
+  feedContainer: {
+    padding: 15,
   },
 });

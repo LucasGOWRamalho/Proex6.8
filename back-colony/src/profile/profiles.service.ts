@@ -31,4 +31,9 @@ export class ProfilesService {
   remove(id: string) {
     return this.repo.delete(id);
   }
+
+  // ✅ ADICIONAR ESTE MÉTODO
+  findByEmail(email: string) {
+    return this.repo.findOneBy({ email });
+  }
 }

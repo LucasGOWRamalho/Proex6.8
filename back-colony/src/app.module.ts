@@ -1,30 +1,34 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PostModule } from './post/post.module';
 import { ProfileModule } from './profile/profile.module';
+import { AuthModule } from './auth/auth.module';
+import { UploadModule } from './upload/upload.module';
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
-    // Configuração básica de variáveis de ambiente
-    ConfigModule.forRoot({ 
-      isGlobal: true 
+    // ✅ CONFIGURAÇÃO ATUALIZADA DO TYPEORM
+    TypeOrmModule.forRootAsync({
+      useFactory: () => ({
+        type: 'postgres',
+        host: 'localhost',
+        port: 5432,
+        username: 'postgres',
+        password: 'admin',
+        database: 'colony_db',
+        entities: [__dirname + '/**/*.entity{.ts,.js}'],
+        synchronize: true,
+        logging: true, // Opcional: mostra queries no console
+      }),
     }),
-
-    // Configuração MUITO SIMPLES do TypeORM - sem Async, sem ConfigService
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      url: process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5432/colony_db',
-      entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      synchronize: true, // Apenas para desenvolvimento
-      logging: true,
-    }),
-
-    // Módulos
     PostModule,
     ProfileModule,
+    AuthModule,
+    UploadModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

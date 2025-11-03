@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, TextInput, Alert } from 'react-native';
 import { Image } from 'expo-image';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -38,11 +38,45 @@ export default function PostCard({ pet, onLike, onShare, onComment }: PostCardPr
   const colorScheme = useColorScheme();
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(Math.floor(Math.random() * 50) + 5);
+  const [showMessage, setShowMessage] = useState(false);
+  const [message, setMessage] = useState('');
+  const [showComment, setShowComment] = useState(false);
+  const [comment, setComment] = useState('');
+  const [comments, setComments] = useState<string[]>([]);
 
   const handleLike = () => {
     setLiked(!liked);
     setLikeCount(prev => liked ? prev - 1 : prev + 1);
     onLike?.(pet.id);
+  };
+
+  const handleShare = () => {
+    // Gera um link falso e mostra um alerta
+    const fakeLink = `https://petfinder.com/pet/${pet.id}`;
+    Alert.alert('Compartilhar', `Link copiado: ${fakeLink}`);
+    onShare?.(pet.id);
+  };
+
+  const handleSeen = () => {
+    setShowMessage(true);
+  };
+
+  const handleSendMessage = () => {
+    setShowMessage(false);
+    setMessage('');
+    Alert.alert('Mensagem enviada', 'Sua mensagem foi enviada ao responsável!');
+  };
+
+  const handleComment = () => {
+    setShowComment(true);
+  };
+
+  const handleSendComment = () => {
+    if (comment.trim()) {
+      setComments(prev => [...prev, comment]);
+      setComment('');
+      setShowComment(false);
+    }
   };
 
   const getStatusColor = () => {
@@ -90,22 +124,79 @@ export default function PostCard({ pet, onLike, onShare, onComment }: PostCardPr
             size={24}
             color={liked ? "#FF6B6B" : Colors[colorScheme ?? 'light'].tabIconDefault}
           />
+          <Text style={styles.actionText}>{likeCount}</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton} onPress={() => onComment?.(pet.id)}>
+        <TouchableOpacity style={styles.actionButton} onPress={handleComment}>
           <IconSymbol
             name="message"
             size={24}
             color={Colors[colorScheme ?? 'light'].tabIconDefault}
           />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton} onPress={() => onShare?.(pet.id)}>
+        <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
           <IconSymbol
             name="paperplane"
             size={24}
             color={Colors[colorScheme ?? 'light'].tabIconDefault}
           />
         </TouchableOpacity>
+        <TouchableOpacity style={styles.actionButton} onPress={handleSeen}>
+          <IconSymbol
+            name="chevron.right"
+            size={24}
+            color={Colors[colorScheme ?? 'light'].tabIconDefault}
+          />
+        </TouchableOpacity>
+        {/* Botão para comentar */}
+        <TouchableOpacity style={styles.actionButton} onPress={handleComment}>
+          <Text style={{ color: Colors[colorScheme ?? 'light'].tint, fontWeight: 'bold', marginLeft: 4 }}>Comentar</Text>
+        </TouchableOpacity>
       </View>
+
+      {/* Campo de mensagem para "Eu vi esse cachorro" */}
+      {showMessage && (
+        <View style={styles.messageBox}>
+          <Text style={{ marginBottom: 6, color: Colors[colorScheme ?? 'light'].text }}>Envie uma mensagem para o responsável:</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Digite sua mensagem..."
+            value={message}
+            onChangeText={setMessage}
+            multiline
+          />
+          <TouchableOpacity style={styles.sendButton} onPress={handleSendMessage}>
+            <Text style={{ color: 'white', fontWeight: 'bold' }}>Enviar</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Campo de comentário */}
+      {showComment && (
+        <View style={styles.messageBox}>
+          <Text style={{ marginBottom: 6, color: Colors[colorScheme ?? 'light'].text }}>Comentar na foto:</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Digite seu comentário..."
+            value={comment}
+            onChangeText={setComment}
+            multiline
+          />
+          <TouchableOpacity style={styles.sendButton} onPress={handleSendComment}>
+            <Text style={{ color: 'white', fontWeight: 'bold' }}>Comentar</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Lista de comentários */}
+      {comments.length > 0 && (
+        <View style={styles.commentsBox}>
+          {comments.map((c, idx) => (
+            <Text key={idx} style={{ color: Colors[colorScheme ?? 'light'].text, marginBottom: 2 }}>
+              {c}
+            </Text>
+          ))}
+        </View>
+      )}
 
       {/* Content */}
       <View style={styles.content}>
@@ -235,6 +326,37 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     marginRight: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  actionText: {
+    marginLeft: 4,
+    fontSize: 14,
+    color: '#FF6B6B',
+    fontWeight: 'bold',
+  },
+  messageBox: {
+    backgroundColor: '#f5f5f5',
+    padding: 12,
+    borderRadius: 8,
+    marginHorizontal: 15,
+    marginBottom: 10,
+    marginTop: 5,
+  },
+  input: {
+    backgroundColor: '#fff',
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    padding: 8,
+    minHeight: 40,
+    marginBottom: 8,
+  },
+  sendButton: {
+    backgroundColor: '#0a7ea4',
+    paddingVertical: 8,
+    borderRadius: 6,
+    alignItems: 'center',
   },
   content: {
     paddingHorizontal: 15,
@@ -286,5 +408,12 @@ const styles = StyleSheet.create({
     marginLeft: 6,
     fontSize: 14,
     fontWeight: '600',
+  },
+  commentsBox: {
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+    marginHorizontal: 15,
+    marginBottom: 10,
+    padding: 8,
   },
 });

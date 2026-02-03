@@ -1,0 +1,38 @@
+# .github/workflows/config-check.yml
+name: Verificar Configuração do batata.yml
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  check-config:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout do repositório
+      uses: actions/checkout@v4
+
+    - name: Instalar yq (processador YAML)
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y yq
+
+    - name: Ler e exibir regras de validação de registro de usuário
+      run: |
+        echo "Regras de Validação para user_registration:"
+        yq '.validation_rules.user_registration' .github/batata.yml
+
+    - name: Ler e exibir o status da feature flag 'new_user_onboarding'
+      run: |
+        echo "Status da Feature Flag 'new_user_onboarding':"
+        yq '.feature_flags.new_user_onboarding.enabled' .github/batata.yml
+
+    - name: Ler e exibir a URL do banco de dados do ambiente
+      run: |
+        echo "URL do Banco de Dados do Ambiente:"
+        yq '.environment.database_url' .github/batata.yml
